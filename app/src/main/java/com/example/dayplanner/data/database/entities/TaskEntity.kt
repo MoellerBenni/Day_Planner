@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
  * entity in the database that represents a task
  * @param name the name of the Task
  */
-@Entity
+@Entity(tableName = "task")
 data class TaskEntity(@PrimaryKey(autoGenerate = false) val name: String) {
 
     companion object {
