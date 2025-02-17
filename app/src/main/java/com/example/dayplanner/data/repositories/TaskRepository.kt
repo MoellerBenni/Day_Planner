@@ -1,6 +1,7 @@
 package com.example.dayplanner.data.repositories
 
 import com.example.dayplanner.model.WeekDayTimeFrame
+import kotlinx.coroutines.flow.Flow
 
 interface TaskRepository {
 
@@ -26,4 +27,9 @@ interface TaskRepository {
      * retrieves all [WeekDayTimeFrame] of a task with [taskName]
      */
     suspend fun getWeekDayTimeFramesOfTask(taskName: String): List<WeekDayTimeFrame>
+
+    /**
+     * retrieves all names of tasks as a [Flow]
+     */
+    fun getTaskNamesAsFlow(): Flow<List<String>>
 }

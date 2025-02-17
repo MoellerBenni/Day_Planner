@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import com.example.dayplanner.data.database.entities.TaskEntity
 import com.example.dayplanner.data.database.entities.TaskTimeEntity
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Dao for the [TaskDatabase]
@@ -47,5 +48,8 @@ interface TaskDao {
      */
     @Query("SELECT * FROM task_time WHERE task_name = :taskName")
     suspend fun getTaskTimesOfTaskEntity(taskName: String): List<TaskTimeEntity>
+
+    @Query("SELECT name FROM task")
+    fun getTaskNamesAsFlow(): Flow<List<String>>
 
 }

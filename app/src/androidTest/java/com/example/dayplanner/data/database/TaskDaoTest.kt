@@ -7,6 +7,7 @@ import com.example.dayplanner.data.database.entities.TaskEntity
 import com.example.dayplanner.data.database.entities.TaskTimeEntity
 import com.example.dayplanner.data.database.entities.testTaskEntities
 import com.example.dayplanner.data.database.entities.testTaskTimeEntities
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -97,6 +98,21 @@ class TaskDaoTest {
         val taskName = "invalid"
         val taskTimesFromDatabase = taskDao.getTaskTimesOfTaskEntity(taskName)
         assertTrue(taskTimesFromDatabase.isEmpty())
+    }
+
+    @Test
+    fun getTaskNamesAsFlow() = runTest {
+        val flow = taskDao.getTaskNamesAsFlow()
+        var expectedTaskNames = testTaskEntities.map { it.name }
+        var taskNames = flow.first()
+        assertEquals(expectedTaskNames, taskNames)
+
+        //now check if flow updates when tasks are changed
+        val taskToDelete = testTaskEntities.first()
+        taskDao.deleteTaskEntity(taskToDelete)
+        expectedTaskNames = expectedTaskNames - taskToDelete.name
+        taskNames = flow.first()
+        assertEquals(expectedTaskNames, taskNames)
     }
 
 

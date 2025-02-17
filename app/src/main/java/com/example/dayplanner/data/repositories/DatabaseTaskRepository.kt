@@ -6,6 +6,7 @@ import com.example.dayplanner.data.database.entities.TaskEntity.Companion.isVali
 import com.example.dayplanner.data.database.entities.TaskTimeEntity
 import com.example.dayplanner.model.TimeFrame
 import com.example.dayplanner.model.WeekDayTimeFrame
+import kotlinx.coroutines.flow.Flow
 
 class DatabaseTaskRepository(private val taskDao: TaskDao) : TaskRepository {
 
@@ -46,4 +47,6 @@ class DatabaseTaskRepository(private val taskDao: TaskDao) : TaskRepository {
             WeekDayTimeFrame(weekDay = it.weekDay, timeFrame = timeFrame)
         }
     }
+
+    override fun getTaskNamesAsFlow(): Flow<List<String>> = taskDao.getTaskNamesAsFlow()
 }

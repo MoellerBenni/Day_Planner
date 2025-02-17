@@ -6,6 +6,7 @@ import com.example.dayplanner.data.database.entities.TaskEntity
 import com.example.dayplanner.data.database.entities.TaskTimeEntity
 import com.example.dayplanner.data.database.entities.testTaskEntities
 import com.example.dayplanner.data.database.entities.testTaskTimeEntities
+import java.util.concurrent.Executor
 
 /**
  * returns a prepopulated [TaskDao]
@@ -16,10 +17,12 @@ import com.example.dayplanner.data.database.entities.testTaskTimeEntities
 suspend fun getPrePopulatedDatabase(
     context: Context,
     taskEntities: List<TaskEntity> = testTaskEntities,
-    taskTimeEntities: List<TaskTimeEntity> = testTaskTimeEntities
+    taskTimeEntities: List<TaskTimeEntity> = testTaskTimeEntities,
+    executor: Executor? = null
+
 ): TaskDao {
     val database = Room.inMemoryDatabaseBuilder(
-        context, TaskDatabase::class.java).build()
+        context, TaskDatabase::class.java).apply { if (executor != null ) setQueryExecutor(executor).setTransactionExecutor(executor) }.build()
     val dao = database.dao()
 
     for (task in taskEntities) {
