@@ -3,6 +3,8 @@ package com.example.dayplanner.data.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import com.example.dayplanner.model.TimeFrame
+import com.example.dayplanner.model.WeekDayTimeFrame
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -31,4 +33,9 @@ data class TaskTimeEntity(
     init {
         require(startTime.isBefore(endTime)) { "Start Time $startTime was not before End Time $endTime" }
     }
+
+    /**
+     * converts this [TaskTimeEntity] to a [WeekDayTimeFrame]
+     */
+    fun toWeekDayTimeFrame() = WeekDayTimeFrame(weekDay = weekDay, timeFrame = TimeFrame(startTime = startTime, endTime = endTime))
 }
