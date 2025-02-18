@@ -9,7 +9,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
+/**
+ * use case tp check if a name is valid for a task
+ */
 class ValidateTaskNameUseCase(
     private val taskRepository: TaskRepository,
     coroutineScope: CoroutineScope,
@@ -44,8 +46,11 @@ class ValidateTaskNameUseCase(
     }
 }
 
-sealed interface TaskNameValidationResult {
-    data object Valid : TaskNameValidationResult
-    data object InvalidName : TaskNameValidationResult
-    data object NameAlreadyUsed : TaskNameValidationResult
+/**
+ * result of [ValidateTaskNameUseCase]
+ */
+enum class TaskNameValidationResult {
+    Valid,
+    InvalidName,
+    NameAlreadyUsed
 }
