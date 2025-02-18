@@ -1,4 +1,4 @@
-package com.example.dayplanner.ui.theme.screens.taskScreen
+package com.example.dayplanner.ui.screens.taskScreen
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +77,7 @@ class TaskViewModel(
             val doesTaskExist = taskRepository.doesTaskAlreadyExist(taskName)
             if (!doesTaskExist) {
                 uiState = TaskUiState.TaskNotFound
+                return@launch
             }
 
             val taskTimes = taskRepository.getWeekDayTimeFramesOfTask(taskName)
@@ -98,8 +99,18 @@ class TaskViewModel(
      *
      */
     fun handleIntent(taskIntent: TaskIntent) {
+        val uiState = check()
         when (taskIntent) {
-            is TaskIntent.ChangeTaskState -> changeTaskState(newTaskName = taskIntent.newTaskName, newTimeFrames = taskIntent.newWeekDayTimeFrames)
+            is TaskIntent.ChangeTaskName -> {
+                check(uiState.taskState.isTaskNameEditable) { "Changing the name of a Task during editing is not possible" }
+                changeTaskState(newTaskName = taskIntent.newTaskName, newTimeFrames = uiState.taskState.weekDayTimeFrames)
+            }
+
+            is TaskIntent.ChangeWeekDayTimeFrames -> changeTaskState(
+                newTaskName = uiState.taskState.taskName,
+                newTimeFrames = taskIntent.newWeekDayTimeFrames
+            )
+
             is TaskIntent.ChangeTimeFrameState -> changeTimeFrameState(
                 newStartTime = taskIntent.newStartTime,
                 newEndTime = taskIntent.newEndTime,
@@ -107,6 +118,7 @@ class TaskViewModel(
             )
 
             TaskIntent.SaveTask -> saveTask()
+
         }
     }
 
@@ -117,9 +129,9 @@ class TaskViewModel(
      * @throws IllegalStateException if the [uiState] is not a [TaskUiState.EditTask]
      */
     private fun changeTaskState(newTaskName: String, newTimeFrames: Set<WeekDayTimeFrame>) {
-        val editTaskUiState = requireEditTaskState()
+        val editTaskUiState = check()
 
-        val taskNameValidity = validateTaskNameUseCase(newTaskName)
+        val taskNameValidity = if (canTaskNameBeEdited) validateTaskNameUseCase(newTaskName) else TaskNameValidationResult.Valid //when we are editing a Task, it is retrieved from the database, and thus it's name is always valid
         val timeFrameValidity = if (newTimeFrames.isNotEmpty()) WeekDayTimeFrameValidity.Valid else WeekDayTimeFrameValidity.Empty
         val isSavingPossible = taskNameValidity == TaskNameValidationResult.Valid && timeFrameValidity == WeekDayTimeFrameValidity.Valid
         val newTaskState = TaskState(
@@ -142,7 +154,7 @@ class TaskViewModel(
      *
      */
     private fun changeTimeFrameState(newStartTime: LocalTime, newEndTime: LocalTime, newWeekDays: Set<DayOfWeek>) {
-        val editTaskUiState = requireEditTaskState()
+        val editTaskUiState = check()
 
         val timeValidity = if (!newStartTime.isBefore(newEndTime)) TimeFrameValidity.StartNotBeforeEnd else TimeFrameValidity.Valid
         val weekDayValidity = if (newWeekDays.isEmpty()) WeekDayValidity.Empty else WeekDayValidity.Valid
@@ -164,7 +176,7 @@ class TaskViewModel(
      * @throws IllegalStateException if isSavingPossible in the [uiState] is false
      */
     private fun saveTask() {
-        val editTaskUiState = requireEditTaskState()
+        val editTaskUiState = check()
         check(editTaskUiState.taskState.isSavingPossible) { "Saving was tried despite the ui state stating it is not possible" }
 
         uiState = TaskUiState.Saving
@@ -179,8 +191,8 @@ class TaskViewModel(
      * returns the ui state as [TaskUiState.EditTask]
      * @throws IllegalStateException when the [uiState] is a [TaskUiState.EditTask]
      */
-    private fun requireEditTaskState(): TaskUiState.EditTask {
-        require(uiState is TaskUiState.EditTask) { "ui state must be in EditTask state but was $uiState" }
+    private fun check(): TaskUiState.EditTask {
+        check(uiState is TaskUiState.EditTask) { "ui state must be in EditTask state but was $uiState" }
         return uiState as TaskUiState.EditTask
     }
 

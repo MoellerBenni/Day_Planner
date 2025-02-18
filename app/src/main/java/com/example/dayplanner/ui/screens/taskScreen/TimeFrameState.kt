@@ -1,4 +1,4 @@
-package com.example.dayplanner.ui.theme.screens.taskScreen
+package com.example.dayplanner.ui.screens.taskScreen
 
 import com.example.dayplanner.model.TimeFrame
 import java.time.DayOfWeek

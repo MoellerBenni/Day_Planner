@@ -1,4 +1,4 @@
-package com.example.dayplanner.ui.theme.screens.taskScreen
+package com.example.dayplanner.ui.screens.taskScreen
 
 import com.example.dayplanner.data.useCases.TaskNameValidationResult
 import com.example.dayplanner.model.WeekDayTimeFrame
