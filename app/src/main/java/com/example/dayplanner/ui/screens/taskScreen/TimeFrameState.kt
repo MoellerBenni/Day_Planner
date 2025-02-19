@@ -1,6 +1,6 @@
 package com.example.dayplanner.ui.screens.taskScreen
 
-import com.example.dayplanner.model.TimeFrame
+import com.example.dayplanner.model.WeekDayTimeFrame
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -10,22 +10,15 @@ import java.time.LocalTime
 data class TimeFrameState(
     val startTime: LocalTime,
     val endTime: LocalTime,
-    val timeValidity: TimeFrameValidity,
     val weekDays: Set<DayOfWeek>,
-    val weekDayValidity: WeekDayValidity,
     val isSavingPossible: Boolean,
+    val timeFrameError: TimeFrameValidity
 )
 
 /**
- * result of checking if a [TimeFrame] is valid for a Task
+ * result of checking if a [WeekDayTimeFrame] is valid for a Task
  */
 enum class TimeFrameValidity {
-    Valid, StartNotBeforeEnd
+    Valid, StartTimeNotBeforeEndTime, WeekDaysEmpty
 }
 
-/**
- * result of checking if a list of [DayOfWeek] are valid for a Task
- */
-enum class WeekDayValidity {
-    Valid, Empty
-}

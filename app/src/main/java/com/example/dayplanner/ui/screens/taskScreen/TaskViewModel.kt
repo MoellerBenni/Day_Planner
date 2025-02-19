@@ -131,7 +131,8 @@ class TaskViewModel(
     private fun changeTaskState(newTaskName: String, newTimeFrames: Set<WeekDayTimeFrame>) {
         val editTaskUiState = check()
 
-        val taskNameValidity = if (canTaskNameBeEdited) validateTaskNameUseCase(newTaskName) else TaskNameValidationResult.Valid //when we are editing a Task, it is retrieved from the database, and thus it's name is always valid
+        val taskNameValidity =
+            if (canTaskNameBeEdited) validateTaskNameUseCase(newTaskName) else TaskNameValidationResult.Valid //when we are editing a Task, it is retrieved from the database, and thus it's name is always valid
         val timeFrameValidity = if (newTimeFrames.isNotEmpty()) WeekDayTimeFrameValidity.Valid else WeekDayTimeFrameValidity.Empty
         val isSavingPossible = taskNameValidity == TaskNameValidationResult.Valid && timeFrameValidity == WeekDayTimeFrameValidity.Valid
         val newTaskState = TaskState(
@@ -156,16 +157,23 @@ class TaskViewModel(
     private fun changeTimeFrameState(newStartTime: LocalTime, newEndTime: LocalTime, newWeekDays: Set<DayOfWeek>) {
         val editTaskUiState = check()
 
-        val timeValidity = if (!newStartTime.isBefore(newEndTime)) TimeFrameValidity.StartNotBeforeEnd else TimeFrameValidity.Valid
-        val weekDayValidity = if (newWeekDays.isEmpty()) WeekDayValidity.Empty else WeekDayValidity.Valid
-        val isSavingPossible = timeValidity == TimeFrameValidity.Valid && weekDayValidity == WeekDayValidity.Valid
+        val isTimeFrameValid = newStartTime.isBefore(newEndTime)
+        val areWeekDaysValid = newWeekDays.isNotEmpty()
+        val error =
+            if (!isTimeFrameValid) {
+                TimeFrameValidity.StartTimeNotBeforeEndTime
+            } else if (!areWeekDaysValid) {
+                TimeFrameValidity.WeekDaysEmpty
+            } else {
+                TimeFrameValidity.Valid
+            }
+        val isSavingPossible = error == TimeFrameValidity.Valid
         val timeFrameState = TimeFrameState(
             startTime = newStartTime,
             endTime = newEndTime,
-            timeValidity = timeValidity,
             weekDays = newWeekDays,
-            weekDayValidity = weekDayValidity,
-            isSavingPossible = isSavingPossible
+            isSavingPossible = isSavingPossible,
+            timeFrameError = error
         )
         uiState = editTaskUiState.copy(timeFrameState = timeFrameState)
     }

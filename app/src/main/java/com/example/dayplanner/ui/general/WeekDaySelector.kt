@@ -37,7 +37,7 @@ fun WeekDaySelector(weekDay: DayOfWeek, selected: Boolean, onClick: (Boolean) ->
         targetValue = if (selected) {
             MaterialTheme.colorScheme.primary
         } else {
-            MaterialTheme.colorScheme.surfaceContainer
+            MaterialTheme.colorScheme.secondaryContainer
         },
         animationSpec = tween(durationMillis = 250)
     )
@@ -46,7 +46,7 @@ fun WeekDaySelector(weekDay: DayOfWeek, selected: Boolean, onClick: (Boolean) ->
         targetValue = if (selected) {
             MaterialTheme.colorScheme.onPrimary
         } else {
-            MaterialTheme.colorScheme.onSurface
+            MaterialTheme.colorScheme.onSecondaryContainer
         },
         animationSpec = tween(250)
     )
@@ -58,7 +58,7 @@ fun WeekDaySelector(weekDay: DayOfWeek, selected: Boolean, onClick: (Boolean) ->
             .size(25.dp)
             .background(color = backGroundColor, shape = CircleShape), contentAlignment = Alignment.Center
     ) {
-        Text(text = weekDay.name.first().toString(), color = textColor, style = MaterialTheme.typography.labelMedium)
+        Text(text = weekDay.name.first().toString(), color = textColor, style = MaterialTheme.typography.labelLarge)
     }
 }
 

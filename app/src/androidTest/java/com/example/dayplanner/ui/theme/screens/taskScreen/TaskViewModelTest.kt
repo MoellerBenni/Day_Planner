@@ -16,6 +16,8 @@ import com.example.dayplanner.ui.screens.taskScreen.TaskIntent
 import com.example.dayplanner.ui.screens.taskScreen.TaskState
 import com.example.dayplanner.ui.screens.taskScreen.TaskUiState
 import com.example.dayplanner.ui.screens.taskScreen.TaskViewModel
+import com.example.dayplanner.ui.screens.taskScreen.TimeFrameState
+import com.example.dayplanner.ui.screens.taskScreen.TimeFrameValidity
 import com.example.dayplanner.ui.screens.taskScreen.WeekDayTimeFrameValidity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asExecutor
@@ -233,6 +235,72 @@ class TaskViewModelTest {
         createTaskViewModel(navigateToSavedState = true)
         val newWeekDayTimeFrames = setOf<WeekDayTimeFrame>()
         val changeIntent = TaskIntent.ChangeWeekDayTimeFrames(newWeekDayTimeFrames)
+        assertFailsWith<IllegalStateException> { taskViewModel.handleIntent(changeIntent) }
+    }
+
+    @Test
+    fun changeTimeFrameState_Valid() = runTest {
+        createTaskViewModel()
+        val startTime = LocalTime.of(10, 0)
+        val endTime = LocalTime.of(11, 0)
+        val weekDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)
+        val changeIntent = TaskIntent.ChangeTimeFrameState(newStartTime = startTime, newEndTime = endTime, newWeekDays = weekDays)
+        taskViewModel.handleIntent(changeIntent)
+        val expectedTimeFrameState = TimeFrameState(
+            startTime = startTime,
+            endTime = endTime,
+            weekDays = weekDays,
+            isSavingPossible = true,
+            timeFrameError = TimeFrameValidity.Valid
+        )
+        val expectedUiState = testUiState.copy(timeFrameState = expectedTimeFrameState)
+        assertEquals(expectedUiState, taskViewModel.uiState)
+    }
+
+    @Test
+    fun changeTimeFrameState_InvalidStartEndTime() = runTest {
+        createTaskViewModel()
+        val startTime = LocalTime.of(10, 0)
+        val weekDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)
+        val changeIntent = TaskIntent.ChangeTimeFrameState(newStartTime = startTime, newEndTime = startTime, newWeekDays = weekDays)
+        taskViewModel.handleIntent(changeIntent)
+        val expectedTimeFrameState = TimeFrameState(
+            startTime = startTime,
+            endTime = startTime,
+            weekDays = weekDays,
+            isSavingPossible = false,
+            timeFrameError = TimeFrameValidity.StartTimeNotBeforeEndTime
+        )
+        val expectedUiState = testUiState.copy(timeFrameState = expectedTimeFrameState)
+        assertEquals(expectedUiState, taskViewModel.uiState)
+    }
+
+    @Test
+    fun changeTimeFrameState_WeekDaysEmpty() = runTest {
+        createTaskViewModel()
+        val startTime = LocalTime.of(10, 0)
+        val endTime = LocalTime.of(11, 0)
+        val weekDays = setOf<DayOfWeek>()
+        val changeIntent = TaskIntent.ChangeTimeFrameState(newStartTime = startTime, newEndTime = endTime, newWeekDays = weekDays)
+        taskViewModel.handleIntent(changeIntent)
+        val expectedTimeFrameState = TimeFrameState(
+            startTime = startTime,
+            endTime = endTime,
+            weekDays = weekDays,
+            isSavingPossible = false,
+            timeFrameError = TimeFrameValidity.WeekDaysEmpty
+        )
+        val expectedUiState = testUiState.copy(timeFrameState = expectedTimeFrameState)
+        assertEquals(expectedUiState, taskViewModel.uiState)
+    }
+
+    @Test
+    fun changeTimeFrameState_InvalidState() = runTest {
+        createTaskViewModel(navigateToSavedState = true)
+        val startTime = LocalTime.of(10, 0)
+        val endTime = LocalTime.of(11, 0)
+        val weekDays = setOf<DayOfWeek>()
+        val changeIntent = TaskIntent.ChangeTimeFrameState(newStartTime = startTime, newEndTime = endTime, newWeekDays = weekDays)
         assertFailsWith<IllegalStateException> { taskViewModel.handleIntent(changeIntent) }
     }
 

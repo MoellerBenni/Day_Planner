@@ -2,4 +2,9 @@
     <string name="app_name">Day Planner</string>
     <string name="task_name">Task Name</string>
     <string name="clear_task_name">clear Task Name</string>
+    <string name="cancel">Cancel</string>
+    <string name="pick_time_frames">Pick Time Frames</string>
+    <string name="confirm">Confirm</string>
+    <string name="start_time">Start Time</string>
+    <string name="end_time">End Time</string>
 </resources>
