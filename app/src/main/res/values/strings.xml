@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Day Planner</string>
+    <string name="task_name">Task Name</string>
+    <string name="clear_task_name">clear Task Name</string>
 </resources>
