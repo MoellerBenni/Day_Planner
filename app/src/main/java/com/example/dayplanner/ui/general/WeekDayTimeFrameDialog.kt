@@ -101,12 +101,15 @@ fun WeekDayTimeFrameDialog(
                     }
                 }
 
-                Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(25.dp)) {
+                Box(contentAlignment = Alignment.CenterStart, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .height(25.dp)) {
                     ErrorText(text = errorMessage)
                 }
 
 
-                LaunchedEffect(startTime, endTime) {
+                LaunchedEffect(startTime.hour, startTime.minute, endTime.hour, endTime.minute) {
                     onValueChanged(startTime.toLocalTime(), endTime.toLocalTime(), selectedWeekDays)
                 }
             }
@@ -120,7 +123,13 @@ private fun WeekDayTimeFrameDialog_Preview() {
     DayPlannerTheme {
         val selectedWeekDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)
         val errorMessage = "test error message"
-        WeekDayTimeFrameDialog(selectedWeekDays = selectedWeekDays, onConfirm = {}, onDismissRequest = {}, onValueChanged = { _, _, _ -> }, errorMessage = errorMessage)
+        WeekDayTimeFrameDialog(
+            selectedWeekDays = selectedWeekDays,
+            onConfirm = {},
+            onDismissRequest = {},
+            onValueChanged = { _, _, _ -> },
+            errorMessage = errorMessage
+        )
     }
 }
 

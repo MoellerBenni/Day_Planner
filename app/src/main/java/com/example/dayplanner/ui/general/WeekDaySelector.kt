@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.dayplanner.ui.theme.DayPlannerTheme
@@ -56,7 +57,8 @@ fun WeekDaySelector(weekDay: DayOfWeek, selected: Boolean, onClick: (Boolean) ->
         modifier = modifier
             .toggleable(value = selected, enabled = true, onValueChange = onClick, interactionSource = interactionSource, indication = null)
             .size(25.dp)
-            .background(color = backGroundColor, shape = CircleShape), contentAlignment = Alignment.Center
+            .background(color = backGroundColor, shape = CircleShape)
+            .testTag("$weekDay selector"), contentAlignment = Alignment.Center
     ) {
         Text(text = weekDay.name.first().toString(), color = textColor, style = MaterialTheme.typography.labelLarge)
     }
