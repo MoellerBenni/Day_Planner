@@ -9,7 +9,9 @@ import java.time.LocalTime
  */
 sealed interface TaskIntent {
     data class ChangeTaskName(val newTaskName: String) : TaskIntent
-    data class ChangeWeekDayTimeFrames(val newWeekDayTimeFrames: Set<WeekDayTimeFrame>): TaskIntent
+    data class DeleteWeekDayTimeFrames(val weekDayTimeFrames: Set<WeekDayTimeFrame>): TaskIntent
     data class ChangeTimeFrameState(val newStartTime: LocalTime, val newEndTime: LocalTime, val newWeekDays: Set<DayOfWeek>) : TaskIntent
+    data object DismissTimeFrameState: TaskIntent
+    data object SaveCurrentTimeFrameState: TaskIntent
     data object SaveTask : TaskIntent
 }

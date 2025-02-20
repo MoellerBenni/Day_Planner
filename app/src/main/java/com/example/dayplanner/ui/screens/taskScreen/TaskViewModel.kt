@@ -13,6 +13,7 @@ import com.example.dayplanner.DayPlannerApplication
 import com.example.dayplanner.data.repositories.TaskRepository
 import com.example.dayplanner.data.useCases.TaskNameValidationResult
 import com.example.dayplanner.data.useCases.ValidateTaskNameUseCase
+import com.example.dayplanner.model.TimeFrame
 import com.example.dayplanner.model.WeekDayTimeFrame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -87,7 +88,7 @@ class TaskViewModel(
                 isTaskNameEditable = false,
                 weekDayTimeFrames = taskTimes.toSet(),
                 weekDayTimeFrameValidity = WeekDayTimeFrameValidity.Valid,
-                isSavingPossible = false
+                isSavingPossible = true
             )
             uiState = TaskUiState.EditTask(taskState = taskState, timeFrameState = null)
         }
@@ -99,17 +100,17 @@ class TaskViewModel(
      *
      */
     fun handleIntent(taskIntent: TaskIntent) {
-        val uiState = check()
+        val currentUiState = checkUiState()
         when (taskIntent) {
             is TaskIntent.ChangeTaskName -> {
-                check(uiState.taskState.isTaskNameEditable) { "Changing the name of a Task during editing is not possible" }
-                changeTaskState(newTaskName = taskIntent.newTaskName, newTimeFrames = uiState.taskState.weekDayTimeFrames)
+                check(currentUiState.taskState.isTaskNameEditable) { "Changing the name of a Task during editing is not possible" }
+                changeTaskState(newTaskName = taskIntent.newTaskName, newTimeFrames = currentUiState.taskState.weekDayTimeFrames)
             }
 
-            is TaskIntent.ChangeWeekDayTimeFrames -> changeTaskState(
-                newTaskName = uiState.taskState.taskName,
-                newTimeFrames = taskIntent.newWeekDayTimeFrames
-            )
+            is TaskIntent.DeleteWeekDayTimeFrames -> {
+                val newWeekDayTimeFrames = currentUiState.taskState.weekDayTimeFrames - taskIntent.weekDayTimeFrames
+                changeTaskState(newTaskName = currentUiState.taskState.taskName, newTimeFrames = newWeekDayTimeFrames)
+            }
 
             is TaskIntent.ChangeTimeFrameState -> changeTimeFrameState(
                 newStartTime = taskIntent.newStartTime,
@@ -117,8 +118,11 @@ class TaskViewModel(
                 newWeekDays = taskIntent.newWeekDays
             )
 
-            TaskIntent.SaveTask -> saveTask()
+            is TaskIntent.SaveCurrentTimeFrameState -> saveCurrentTimeFrameState()
 
+            TaskIntent.DismissTimeFrameState -> uiState = currentUiState.copy(timeFrameState = null)
+
+            TaskIntent.SaveTask -> saveTask()
         }
     }
 
@@ -129,7 +133,7 @@ class TaskViewModel(
      * @throws IllegalStateException if the [uiState] is not a [TaskUiState.EditTask]
      */
     private fun changeTaskState(newTaskName: String, newTimeFrames: Set<WeekDayTimeFrame>) {
-        val editTaskUiState = check()
+        val editTaskUiState = checkUiState()
 
         val taskNameValidity =
             if (canTaskNameBeEdited) validateTaskNameUseCase(newTaskName) else TaskNameValidationResult.Valid //when we are editing a Task, it is retrieved from the database, and thus it's name is always valid
@@ -155,7 +159,7 @@ class TaskViewModel(
      *
      */
     private fun changeTimeFrameState(newStartTime: LocalTime, newEndTime: LocalTime, newWeekDays: Set<DayOfWeek>) {
-        val editTaskUiState = check()
+        val editTaskUiState = checkUiState()
 
         val isTimeFrameValid = newStartTime.isBefore(newEndTime)
         val areWeekDaysValid = newWeekDays.isNotEmpty()
@@ -179,12 +183,33 @@ class TaskViewModel(
     }
 
     /**
+     * saves the current time frame state to the task state
+     * @throws IllegalStateException if the [uiState] is not a [TaskUiState.EditTask]
+     * @throws IllegalStateException when the current time frame state is null
+     * @throws IllegalStateException when saving is not possible
+     */
+    private fun saveCurrentTimeFrameState() {
+        val currentUiState = checkUiState()
+        check(currentUiState.timeFrameState != null) { "can't save current time Frame when it is null" }
+        check(currentUiState.timeFrameState.isSavingPossible) { "saving current time frame is not allowed when saving is not possible" }
+        val timeFrame = TimeFrame(startTime = currentUiState.timeFrameState.startTime, endTime = currentUiState.timeFrameState.endTime)
+        val newWeekDayTimeFrames = currentUiState.timeFrameState.weekDays.map { selectedWeekDay ->
+            WeekDayTimeFrame(weekDay = selectedWeekDay, timeFrame = timeFrame)
+        }.toSet()
+        uiState = currentUiState.copy(timeFrameState = null)
+        changeTaskState(
+            newTaskName = currentUiState.taskState.taskName,
+            newTimeFrames = currentUiState.taskState.weekDayTimeFrames + newWeekDayTimeFrames
+        )
+    }
+
+    /**
      *
      * @throws IllegalStateException if the [uiState] is not a [TaskUiState.EditTask]
      * @throws IllegalStateException if isSavingPossible in the [uiState] is false
      */
     private fun saveTask() {
-        val editTaskUiState = check()
+        val editTaskUiState = checkUiState()
         check(editTaskUiState.taskState.isSavingPossible) { "Saving was tried despite the ui state stating it is not possible" }
 
         uiState = TaskUiState.Saving
@@ -199,7 +224,7 @@ class TaskViewModel(
      * returns the ui state as [TaskUiState.EditTask]
      * @throws IllegalStateException when the [uiState] is a [TaskUiState.EditTask]
      */
-    private fun check(): TaskUiState.EditTask {
+    private fun checkUiState(): TaskUiState.EditTask {
         check(uiState is TaskUiState.EditTask) { "ui state must be in EditTask state but was $uiState" }
         return uiState as TaskUiState.EditTask
     }

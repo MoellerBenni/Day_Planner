@@ -51,7 +51,7 @@ class TaskViewModelTest {
             isTaskNameEditable = false,
             weekDayTimeFrames = taskTimeEntities.filter { it.taskName == testTask }.map { it.toWeekDayTimeFrame() }.toSet(),
             weekDayTimeFrameValidity = WeekDayTimeFrameValidity.Valid,
-            isSavingPossible = false
+            isSavingPossible = true
         ), timeFrameState = null
     )
 
@@ -60,7 +60,11 @@ class TaskViewModelTest {
         context = ApplicationProvider.getApplicationContext()
     }
 
-    private fun createTaskViewModel(taskName: String? = testTask, navigateToSavedState: Boolean = false) = runTest {
+    private fun createTaskViewModel(
+        taskName: String? = testTask,
+        weekDayTimeFramesToAdd: Set<WeekDayTimeFrame> = emptySet(),
+        navigateToSavedState: Boolean = false
+    ) = runTest {
         val dao = getPrePopulatedDatabase(
             context = context,
             taskEntities = taskEntities,
@@ -76,11 +80,18 @@ class TaskViewModelTest {
         taskViewModel = TaskViewModel(taskRepository = taskRepository, validateTaskNameUseCase = validateTaskNameUseCase, taskName = taskName)
         runCurrent()
 
-        if (navigateToSavedState) {
-            val uiState = taskViewModel.uiState as TaskUiState.EditTask
-            val changeIntent =
-                TaskIntent.ChangeWeekDayTimeFrames(newWeekDayTimeFrames = uiState.taskState.weekDayTimeFrames) //to make saving possible
+        for (timeFrame in weekDayTimeFramesToAdd.map { it.timeFrame }.distinct()) {
+            val weekDaysOfTimeFrame = weekDayTimeFramesToAdd.filter { it.timeFrame == timeFrame }.map { it.weekDay }
+            val changeIntent = TaskIntent.ChangeTimeFrameState(
+                newStartTime = timeFrame.startTime,
+                newEndTime = timeFrame.endTime,
+                newWeekDays = weekDaysOfTimeFrame.toSet()
+            )
             taskViewModel.handleIntent(changeIntent)
+            taskViewModel.handleIntent(TaskIntent.SaveCurrentTimeFrameState)
+        }
+
+        if (navigateToSavedState) {
             taskViewModel.handleIntent(TaskIntent.SaveTask)
             advanceUntilIdle()
         }
@@ -197,45 +208,25 @@ class TaskViewModelTest {
     }
 
     @Test
-    fun changeWeekDayTimeFrames_Valid() = runTest {
+    fun deleteWeekDayTimeFrames() {
         createTaskViewModel()
-        val newWeekDayTimeFrames =
-            setOf(
-                WeekDayTimeFrame(weekDay = DayOfWeek.MONDAY, timeFrame = TimeFrame(startTime = LocalTime.of(10, 0), endTime = LocalTime.of(11, 0))),
-                WeekDayTimeFrame(weekDay = DayOfWeek.WEDNESDAY, timeFrame = TimeFrame(startTime = LocalTime.of(12, 0), endTime = LocalTime.of(13, 0)))
-            )
-        val changeIntent = TaskIntent.ChangeWeekDayTimeFrames(newWeekDayTimeFrames)
-        taskViewModel.handleIntent(changeIntent)
-        val newTaskState = testUiState.taskState.copy(
-            weekDayTimeFrames = newWeekDayTimeFrames,
-            weekDayTimeFrameValidity = WeekDayTimeFrameValidity.Valid,
-            isSavingPossible = true
-        )
-        val expectedUIState = testUiState.copy(taskState = newTaskState)
-        assertEquals(expectedUIState, taskViewModel.uiState)
+        val timeFrameToDelete = testUiState.taskState.weekDayTimeFrames.first()
+        val deleteIntent = TaskIntent.DeleteWeekDayTimeFrames(setOf(timeFrameToDelete))
+        taskViewModel.handleIntent(deleteIntent)
+        val expectedTaskState = testUiState.taskState.copy(weekDayTimeFrames = testUiState.taskState.weekDayTimeFrames - timeFrameToDelete)
+        val expectedUiState = testUiState.copy(taskState = expectedTaskState)
+        assertEquals(expectedUiState, taskViewModel.uiState)
     }
 
     @Test
-    fun changeWeekDayTimeFrames_Empty() = runTest {
+    fun deleteWeekDayTimeFrames_All() {
         createTaskViewModel()
-        val newWeekDayTimeFrames = setOf<WeekDayTimeFrame>()
-        val changeIntent = TaskIntent.ChangeWeekDayTimeFrames(newWeekDayTimeFrames)
-        taskViewModel.handleIntent(changeIntent)
-        val newTaskState = testUiState.taskState.copy(
-            weekDayTimeFrames = newWeekDayTimeFrames,
-            weekDayTimeFrameValidity = WeekDayTimeFrameValidity.Empty,
-            isSavingPossible = false
-        )
-        val expectedUIState = testUiState.copy(taskState = newTaskState)
-        assertEquals(expectedUIState, taskViewModel.uiState)
-    }
-
-    @Test
-    fun changeWeekDayTimeFrames_InvalidState() = runTest {
-        createTaskViewModel(navigateToSavedState = true)
-        val newWeekDayTimeFrames = setOf<WeekDayTimeFrame>()
-        val changeIntent = TaskIntent.ChangeWeekDayTimeFrames(newWeekDayTimeFrames)
-        assertFailsWith<IllegalStateException> { taskViewModel.handleIntent(changeIntent) }
+        val timeFrameToDelete = testUiState.taskState.weekDayTimeFrames
+        val deleteIntent = TaskIntent.DeleteWeekDayTimeFrames(timeFrameToDelete)
+        taskViewModel.handleIntent(deleteIntent)
+        val expectedTaskState = testUiState.taskState.copy(weekDayTimeFrames = emptySet(), isSavingPossible = false, weekDayTimeFrameValidity = WeekDayTimeFrameValidity.Empty)
+        val expectedUiState = testUiState.copy(taskState = expectedTaskState)
+        assertEquals(expectedUiState, taskViewModel.uiState)
     }
 
     @Test
@@ -305,12 +296,64 @@ class TaskViewModelTest {
     }
 
     @Test
+    fun dismissTimeFrameState() {
+        createTaskViewModel()
+        val changeIntent = TaskIntent.ChangeTimeFrameState(newStartTime = LocalTime.now(), newEndTime = LocalTime.now(), newWeekDays = emptySet())
+        taskViewModel.handleIntent(changeIntent) //to make sure a timeFrameState is actually present so we can check if it is dismissed
+        taskViewModel.handleIntent(TaskIntent.DismissTimeFrameState)
+        val expectedUiState = testUiState.copy(timeFrameState = null)
+        assertEquals(expectedUiState, taskViewModel.uiState)
+    }
+
+    @Test
+    fun saveCurrentTimeFrameState() = runTest {
+        val newWeekDayTimeFrames =
+            setOf(
+                WeekDayTimeFrame(weekDay = DayOfWeek.MONDAY, timeFrame = TimeFrame(startTime = LocalTime.of(10, 0), endTime = LocalTime.of(11, 0))),
+                WeekDayTimeFrame(weekDay = DayOfWeek.WEDNESDAY, timeFrame = TimeFrame(startTime = LocalTime.of(12, 0), endTime = LocalTime.of(13, 0)))
+            )
+        createTaskViewModel(weekDayTimeFramesToAdd = newWeekDayTimeFrames)
+
+        val newTaskState = testUiState.taskState.copy(
+            weekDayTimeFrames = testUiState.taskState.weekDayTimeFrames + newWeekDayTimeFrames,
+            weekDayTimeFrameValidity = WeekDayTimeFrameValidity.Valid,
+            isSavingPossible = true
+        )
+        val expectedUIState = testUiState.copy(taskState = newTaskState, timeFrameState = null)
+        assertEquals(expectedUIState, taskViewModel.uiState)
+    }
+
+    @Test
+    fun saveCurrentTimeFrameState_InvalidState() = runTest {
+        createTaskViewModel(navigateToSavedState = true)
+        val exception = assertFailsWith<IllegalStateException> { taskViewModel.handleIntent(TaskIntent.SaveCurrentTimeFrameState) }
+        val expectedMessage = "ui state must be in EditTask state but was ${taskViewModel.uiState}"
+        assertEquals(expectedMessage, exception.message)
+    }
+
+    @Test
+    fun saveCurrentTimeFrameState_TimeFrameStateNull() = runTest {
+        createTaskViewModel()
+        val exception = assertFailsWith<IllegalStateException> { taskViewModel.handleIntent(TaskIntent.SaveCurrentTimeFrameState) }
+        val expectedMessage = "can't save current time Frame when it is null"
+        assertEquals(expectedMessage, exception.message)
+    }
+
+    @Test
+    fun saveCurrentTimeFrameState_SavingNotPossible() = runTest {
+        createTaskViewModel()
+        val invalidChangeIntent =
+            TaskIntent.ChangeTimeFrameState(newStartTime = LocalTime.MIDNIGHT, newEndTime = LocalTime.MIDNIGHT, newWeekDays = setOf())
+        taskViewModel.handleIntent(invalidChangeIntent)
+        val exception = assertFailsWith<IllegalStateException> { taskViewModel.handleIntent(TaskIntent.SaveCurrentTimeFrameState) }
+        val expectedMessage = "saving current time frame is not allowed when saving is not possible"
+        assertEquals(expectedMessage, exception.message)
+    }
+
+    @Test
     fun saveTask() = runTest {
         val taskToSave = testTask
-        createTaskViewModel(taskName = taskToSave)
-        val changeIntent = TaskIntent.ChangeWeekDayTimeFrames((taskViewModel.uiState as TaskUiState.EditTask).taskState.weekDayTimeFrames)
-        taskViewModel.handleIntent(changeIntent) //saving is only possible in the ViewModel if something was altered first
-
+        createTaskViewModel()
         val saveIntent = TaskIntent.SaveTask
         taskViewModel.handleIntent(saveIntent)
         advanceUntilIdle()
