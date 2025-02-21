@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dayplanner.R
@@ -26,7 +27,7 @@ import com.example.dayplanner.ui.theme.DayPlannerTheme
 @Composable
 fun WeekDayTimeFrameItem(weekDayTimeFrame: WeekDayTimeFrame, onDeleteClicked: () -> Unit, modifier: Modifier = Modifier) {
     ListItem(
-        modifier = modifier,
+        modifier = modifier.testTag("weekDayTimeFrame: $weekDayTimeFrame"),
         colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
         headlineContent = { Text(text = weekDayTimeFrame.weekDay.name) },
         supportingContent = { Text(text = "${weekDayTimeFrame.timeFrame.startTime} - ${weekDayTimeFrame.timeFrame.endTime}") },

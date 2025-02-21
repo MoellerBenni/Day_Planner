@@ -138,7 +138,7 @@ private fun TaskScreenEdit(uiState: TaskUiState.EditTask, onIntent: (TaskIntent)
                     item(key = "Show WeekDayTimeFrameDialog") {
                         IconAndText(
                             imageVector = Icons.Outlined.DateRange,
-                            text = "Add TimeFrames",
+                            text = stringResource(R.string.add_timeframes),
                             modifier = Modifier
                                 .fillParentMaxSize()
                                 .animateItem(),
@@ -176,7 +176,7 @@ private fun TaskScreenEdit(uiState: TaskUiState.EditTask, onIntent: (TaskIntent)
                     )
                     onIntent(changeIntent)
                 }) {
-                    Text("Add new Time Frames", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.add_new_time_frames), style = MaterialTheme.typography.labelLarge)
                 }
             }
 
@@ -200,8 +200,17 @@ private fun TaskScreenEdit(uiState: TaskUiState.EditTask, onIntent: (TaskIntent)
             }
         }
 
+
         uiState.timeFrameState?.let { timeFrameState ->
-            WeekDayTimeFrameDialog(selectedWeekDays = timeFrameState.weekDays,
+            val dialogErrorMessage = when(timeFrameState.timeFrameError) {
+                TimeFrameValidity.Valid -> null
+                TimeFrameValidity.StartTimeNotBeforeEndTime -> stringResource(R.string.start_time_must_be_before_end_time)
+                TimeFrameValidity.WeekDaysEmpty -> stringResource(R.string.no_week_days_are_selected)
+            }
+            WeekDayTimeFrameDialog(
+                selectedWeekDays = timeFrameState.weekDays,
+                confirmEnabled = timeFrameState.isSavingPossible,
+                errorMessage = dialogErrorMessage,
                 onValueChanged = { startTime, endTime, weekDays ->
                     val changeIntent = TaskIntent.ChangeTimeFrameState(newStartTime = startTime, newEndTime = endTime, newWeekDays = weekDays)
                     onIntent(changeIntent)
@@ -234,9 +243,9 @@ private fun TaskScreen_Preview() {
         val timeFrameState = TimeFrameState(
             startTime = LocalTime.MIDNIGHT,
             endTime = LocalTime.MIDNIGHT,
-            weekDays = setOf(DayOfWeek.WEDNESDAY),
-            timeFrameError = TimeFrameValidity.StartTimeNotBeforeEndTime,
-            isSavingPossible = false
+            weekDays = setOf(DayOfWeek.MONDAY),
+            isSavingPossible = true,
+            timeFrameError = TimeFrameValidity.WeekDaysEmpty
         )
         val uiState = TaskUiState.EditTask(taskState = taskState, timeFrameState = timeFrameState)
         TaskScreen(uiState = uiState, onIntent = {}, onNavigateBack = {}, modifier = Modifier.fillMaxSize())

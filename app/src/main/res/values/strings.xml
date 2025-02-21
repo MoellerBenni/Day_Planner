@@ -16,4 +16,8 @@
     <string name="time_frames_must_not_be_empty">Time Frames must not be empty</string>
     <string name="save_task">Save Task</string>
     <string name="remove_all">Remove All</string>
+    <string name="add_timeframes">Add TimeFrames</string>
+    <string name="add_new_time_frames">Add new Time Frames</string>
+    <string name="no_week_days_are_selected">No Week Days are selected</string>
+    <string name="start_time_must_be_before_end_time">Start Time must be before End Time</string>
 </resources>
