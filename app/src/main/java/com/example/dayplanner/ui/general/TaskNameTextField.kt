@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -37,14 +38,17 @@ fun TaskNameTextField(
     TextField(modifier = modifier,
         value = text,
         onValueChange = onTextChanged,
+        textStyle = MaterialTheme.typography.titleLarge,
         isError = errorMessage != null,
         readOnly = readOnly, singleLine = true,
         label = {
             Text(text = stringResource(R.string.task_name))
         },
         trailingIcon = {
-            IconButton(onClick = { onTextChanged("") }) {
-                Icon(imageVector = Icons.Outlined.Clear, contentDescription = stringResource(R.string.clear_task_name))
+            if (!readOnly) {
+                IconButton(onClick = {  onTextChanged("") }) {
+                    Icon(imageVector = Icons.Outlined.Clear, contentDescription = stringResource(R.string.clear_task_name))
+                }
             }
         },
         supportingText = {

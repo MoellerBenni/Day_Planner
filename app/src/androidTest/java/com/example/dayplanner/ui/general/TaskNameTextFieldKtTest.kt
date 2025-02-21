@@ -3,7 +3,9 @@ package com.example.dayplanner.ui.general
 import android.content.Context
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -16,7 +18,7 @@ import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertFalse
 
 
 class TaskNameTextFieldKtTest {
@@ -74,12 +76,16 @@ class TaskNameTextFieldKtTest {
     }
 
     @Test
+    fun clearTextIcon_NotShownOnReadOnly() {
+        showTextField(readOnly = true)
+        composeTestRule.onNodeWithContentDescription(context.getString(R.string.clear_task_name)).assertIsNotDisplayed()
+    }
+
+    @Test
     fun textChanged_ReadOnly() {
-        val textToType = "new text"
-        var typedText: String? = null
-        showTextField(onTextChanged = { typedText = it }, readOnly = true)
-        composeTestRule.onNodeWithTag(testTag).performTextReplacement(textToType)
-        assertNull(typedText)
+        showTextField(readOnly = true)
+        val isEditable = composeTestRule.onNodeWithTag(testTag).fetchSemanticsNode().config[SemanticsProperties.IsEditable]
+        assertFalse(isEditable)
     }
 
     @Test

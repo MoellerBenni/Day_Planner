@@ -41,6 +41,13 @@ import kotlinx.coroutines.delay
 import java.time.DayOfWeek
 import java.time.LocalTime
 
+/**
+ * Screen for adding or editing Tasks
+ * @param uiState the [TaskUiState] for this scree
+ * @param onIntent called when the screen produces a [TaskIntent]
+ * @param onNavigateBack called when this screen wants to navigate back
+ * @param modifier the [Modifier] for this composable
+ */
 @Composable
 fun TaskScreen(uiState: TaskUiState, onIntent: (TaskIntent) -> Unit, onNavigateBack: () -> Unit, modifier: Modifier = Modifier) {
     Scaffold(modifier = modifier) { innerPadding ->
@@ -202,7 +209,7 @@ private fun TaskScreenEdit(uiState: TaskUiState.EditTask, onIntent: (TaskIntent)
 
 
         uiState.timeFrameState?.let { timeFrameState ->
-            val dialogErrorMessage = when(timeFrameState.timeFrameError) {
+            val dialogErrorMessage = when (timeFrameState.timeFrameError) {
                 TimeFrameValidity.Valid -> null
                 TimeFrameValidity.StartTimeNotBeforeEndTime -> stringResource(R.string.start_time_must_be_before_end_time)
                 TimeFrameValidity.WeekDaysEmpty -> stringResource(R.string.no_week_days_are_selected)
