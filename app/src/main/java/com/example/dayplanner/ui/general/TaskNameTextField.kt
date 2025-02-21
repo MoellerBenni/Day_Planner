@@ -1,6 +1,8 @@
 package com.example.dayplanner.ui.general
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
@@ -46,7 +48,9 @@ fun TaskNameTextField(
             }
         },
         supportingText = {
-            ErrorText(text = errorMessage)
+            Box(modifier = Modifier.height(25.dp)) {
+                ErrorText(text = errorMessage)
+            }
         })
 }
 

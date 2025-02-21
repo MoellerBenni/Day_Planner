@@ -5,9 +5,11 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dayplanner.R
@@ -25,6 +27,7 @@ import com.example.dayplanner.ui.theme.DayPlannerTheme
 fun WeekDayTimeFrameItem(weekDayTimeFrame: WeekDayTimeFrame, onDeleteClicked: () -> Unit, modifier: Modifier = Modifier) {
     ListItem(
         modifier = modifier,
+        colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
         headlineContent = { Text(text = weekDayTimeFrame.weekDay.name) },
         supportingContent = { Text(text = "${weekDayTimeFrame.timeFrame.startTime} - ${weekDayTimeFrame.timeFrame.endTime}") },
         leadingContent = { Icon(painter = painterResource(R.drawable.repeat), contentDescription = null) },
